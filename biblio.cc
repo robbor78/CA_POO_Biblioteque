@@ -62,9 +62,9 @@ public:
 
 class Exemplaire {
 private:
-  Oeuvre& oeuvre;
+  const Oeuvre& oeuvre;
 public:
-  Exemplaire(Oeuvre &oeuvre) : oeuvre(oeuvre) {
+  Exemplaire(Oeuvre const &oeuvre) : oeuvre(oeuvre) {
     cout << "Nouvel exemplaire de : "<<oeuvre.getTitre()<<", "<<oeuvre.getAuteur().getNom()<<", en "<< oeuvre.getLangue()<< endl;
   }
   Exemplaire(Exemplaire const &ex) : oeuvre(ex.getOeuvre()) {
@@ -75,7 +75,7 @@ public:
     cout << "Un exemplaire de \""<<oeuvre.getTitre()<<", "<<oeuvre.getAuteur().getNom()<<", en "<<oeuvre.getLangue() << "\" a été jeté !" <<endl;
   }
 
-  Oeuvre& getOeuvre() const {return oeuvre;}
+  const Oeuvre& getOeuvre() const {return oeuvre;}
 
   void affiche() {
     cout << "Exemplaire de : "<<oeuvre.getTitre()<<", "<<oeuvre.getAuteur().getNom()<<", en "<<oeuvre.getLangue() << endl;
@@ -93,15 +93,15 @@ public:
 
   }
   ~Bibliotheque() {
-    cout << "La bibliothèque "<<nom<<" ferme ses portes, et détruit ses exemplaires :";
+    cout << "La bibliothèque "<<nom<<" ferme ses portes, et détruit ses exemplaires :" << endl;
   }
 
   string getNom() const {return nom;}
 
   void stocker(Oeuvre& o, int nombre=1) {
     for (int i=0; i<nombre; i++) {
-      Exemplaire ex(o);
-      liste.push_back(ex);
+      //Exemplaire ex(o);
+      liste.push_back(Exemplaire(o));//ex);
     }
   }
 
@@ -154,7 +154,7 @@ int main()
     o4("Zazie dans le métro"      , a3, "français" ),
     o5("The Count of Monte-Cristo", a2, "anglais" );
 
-/*  Bibliotheque biblio("municipale");
+  Bibliotheque biblio("municipale");
     biblio.stocker(o1, 2);
     biblio.stocker(o2);
     biblio.stocker(o3, 3);
@@ -173,7 +173,7 @@ int main()
     biblio.afficher_auteurs(true);
 
     cout << " Il y a " << biblio.compter_exemplaires(o3) << " exemplaires de "
-    << o3.getTitre() << endl;*/
+    << o3.getTitre() << endl;
 
   return 0;
 }
