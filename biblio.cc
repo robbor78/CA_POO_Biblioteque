@@ -26,32 +26,32 @@ using namespace std;
 
 class Auteur {
 private:
-  string nom;
+  const string nom;
   bool prime;
 
 public:
-  Auteur(string nom, bool prime=false) : nom(nom), prime(prime) {
+  Auteur(const string nom, bool prime=false) : nom(nom), prime(prime) {
 
   }
 
   Auteur(Auteur const &copy) = delete;
 
-  string getNom() {return nom;}
-  bool getPrix() {return prime;}
+  string getNom() const {return nom;}
+  bool getPrix() const {return prime;}
 };
 
 class Oeuvre {
 private:
-  string titre;
-  Auteur& auteur;
-  string langue;
+  const string titre;
+  const Auteur& auteur;
+  const string langue;
 public:
-  Oeuvre(string titre, Auteur &auteur, string langue) : titre(titre), auteur(auteur), langue(langue) {}
+  Oeuvre(const string titre,const  Auteur &auteur, const string langue) : titre(titre), auteur(auteur), langue(langue) {}
   ~Oeuvre() {
     cout << "L’oeuvre \""<<titre<<", "<<auteur.getNom()<<", en "<<langue<<"\" n’est plus disponible." << endl;
   }
 
-  Auteur& getAuteur() const {return auteur;}
+  const Auteur& getAuteur() const {return auteur;}
   string getLangue() const {return langue;}
   string getTitre() const {return titre;}
 
@@ -77,7 +77,7 @@ public:
 
   const Oeuvre& getOeuvre() const {return oeuvre;}
 
-  void affiche() {
+  void affiche() const {
     cout << "Exemplaire de : "<<oeuvre.getTitre()<<", "<<oeuvre.getAuteur().getNom()<<", en "<<oeuvre.getLangue() << endl;
   }
 
@@ -85,10 +85,10 @@ public:
 
 class Bibliotheque {
 private:
-  string nom;
+  const string nom;
   vector<Exemplaire> liste;
 public:
-  Bibliotheque(string nom) : nom(nom) {
+  Bibliotheque(const string nom) : nom(nom) {
     cout << "La bibliothèque "<< nom<<" est ouverte !" << endl;
 
   }
@@ -105,24 +105,39 @@ public:
     }
   }
 
-  void lister_exemplaires(string langue="") {
+  void lister_exemplaires(string langue="") const {
 
-    for_each(liste.begin(), liste.end(), [langue](Exemplaire& ex){
-        if (langue == "" || langue == ex.getOeuvre().getLangue()) {
-          ex.affiche();
-        }
-      });
+    for (auto const & ex : liste) {
+      if (langue == "" || langue == ex.getOeuvre().getLangue()) {
+        ex.affiche();
+      }
+    }
+
+    /* for_each(liste.begin(), liste.end(), [langue](const Exemplaire& ex){
+       if (langue == "" || langue == ex.getOeuvre().getLangue()) {
+       ex.affiche();
+       }
+       });*/
 
   }
 
   int compter_exemplaires(Oeuvre& o) const {
     int x=0;
-    for_each(liste.begin(), liste.end(), [o,&x](const Exemplaire& ex){
+
+    for (auto const & ex : liste) {
+      auto exo = ex.getOeuvre();
+      if (o.getAuteur().getNom() == exo.getAuteur().getNom() && o.getTitre() ==  exo.getTitre() ) {
+        x++;
+      }
+
+    }
+
+/*    for_each(liste.begin(), liste.end(), [o,&x](const Exemplaire& ex){
         auto exo = ex.getOeuvre();
         if (o.getAuteur().getNom() == exo.getAuteur().getNom() && o.getTitre() ==  exo.getTitre() ) {
           x++;
         }
-      });
+        });*/
     return x;
   }
 
@@ -155,25 +170,25 @@ int main()
     o5("The Count of Monte-Cristo", a2, "anglais" );
 
   Bibliotheque biblio("municipale");
-    biblio.stocker(o1, 2);
-    biblio.stocker(o2);
-    biblio.stocker(o3, 3);
-    biblio.stocker(o4);
-    biblio.stocker(o5);
+  biblio.stocker(o1, 2);
+  biblio.stocker(o2);
+  biblio.stocker(o3, 3);
+  biblio.stocker(o4);
+  biblio.stocker(o5);
 
-    cout << "La bibliothèque " << biblio.getNom()
-    << " offre les exemplaires suivants :" << endl;
-    biblio.lister_exemplaires();
+  cout << "La bibliothèque " << biblio.getNom()
+       << " offre les exemplaires suivants :" << endl;
+  biblio.lister_exemplaires();
 
-    const string langue("anglais");
-    cout << " Les exemplaires en "<< langue << " sont :" << endl;
-    biblio.lister_exemplaires(langue);
+  const string langue("anglais");
+  cout << " Les exemplaires en "<< langue << " sont :" << endl;
+  biblio.lister_exemplaires(langue);
 
-    cout << " Les auteurs à succès sont :" << endl;
-    biblio.afficher_auteurs(true);
+  cout << " Les auteurs à succès sont :" << endl;
+  biblio.afficher_auteurs(true);
 
-    cout << " Il y a " << biblio.compter_exemplaires(o3) << " exemplaires de "
-    << o3.getTitre() << endl;
+  cout << " Il y a " << biblio.compter_exemplaires(o3) << " exemplaires de "
+       << o3.getTitre() << endl;
 
   return 0;
 }
