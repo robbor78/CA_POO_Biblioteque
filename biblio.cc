@@ -1,6 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <algorithm>
 #include <string>
 using namespace std;
 
@@ -23,6 +22,9 @@ using namespace std;
   détruit
 
 */
+
+#include <algorithm>
+#include <memory>
 
 class Auteur {
 private:
@@ -48,14 +50,14 @@ private:
 public:
   Oeuvre(const string titre,const  Auteur &auteur, const string langue) : titre(titre), auteur(auteur), langue(langue) {}
   ~Oeuvre() {
-    cout << "L’oeuvre \""<<titre<<", "<<auteur.getNom()<<", en "<<langue<<"\" n’est plus disponible." << endl;
+    cout << "L'oeuvre \""<<titre<<", "<<auteur.getNom()<<", en "<<langue<<"\" n'est plus disponible." << endl;
   }
 
   const Auteur& getAuteur() const {return auteur;}
   string getLangue() const {return langue;}
   string getTitre() const {return titre;}
 
-  void afficher() {
+  void affiche() {
     cout << titre<<", "<<auteur.getNom()<<", en "<< langue << endl;
   }
 };
@@ -70,6 +72,9 @@ public:
   Exemplaire(Exemplaire const &ex) : oeuvre(ex.getOeuvre()) {
     //this->oeuvre = Oeuvre(ex.getOeuvre());
     cout << "Copie d'un exemplaire de : "<<oeuvre.getTitre()<<", "<<oeuvre.getAuteur().getNom()<<", en "<< oeuvre.getLangue()<< endl;
+  }
+  Exemplaire(Exemplaire&& ex) : oeuvre(ex.getOeuvre()) {
+
   }
   ~Exemplaire() {
     cout << "Un exemplaire de \""<<oeuvre.getTitre()<<", "<<oeuvre.getAuteur().getNom()<<", en "<<oeuvre.getLangue() << "\" a été jeté !" <<endl;
@@ -86,68 +91,61 @@ public:
 class Bibliotheque {
 private:
   const string nom;
-  vector<Exemplaire> liste;
+  vector<shared_ptr<Exemplaire>> liste;
 public:
   Bibliotheque(const string nom) : nom(nom) {
     cout << "La bibliothèque "<< nom<<" est ouverte !" << endl;
 
   }
   ~Bibliotheque() {
-    cout << "La bibliothèque "<<nom<<" ferme ses portes, et détruit ses exemplaires :" << endl;
+    cout << "La bibliothèque "<<nom<<" ferme ses portes,"<<endl<<"et détruit ses exemplaires : " << endl;
+
+
   }
 
   string getNom() const {return nom;}
 
   void stocker(Oeuvre& o, int nombre=1) {
+    shared_ptr<Exemplaire> u = make_shared<Exemplaire>(o);
     for (int i=0; i<nombre; i++) {
-      //Exemplaire ex(o);
-      liste.push_back(Exemplaire(o));//ex);
+      //Exemplaire *ex = new Exemplaire(o);
+      liste.push_back(u);
     }
   }
 
   void lister_exemplaires(string langue="") const {
 
-    for (auto const & ex : liste) {
-      if (langue == "" || langue == ex.getOeuvre().getLangue()) {
-        ex.affiche();
+    for (auto const &ex : liste) {
+      if (langue == "" || langue == ex->getOeuvre().getLangue()) {
+        ex->affiche();
       }
     }
-
-    /* for_each(liste.begin(), liste.end(), [langue](const Exemplaire& ex){
-       if (langue == "" || langue == ex.getOeuvre().getLangue()) {
-       ex.affiche();
-       }
-       });*/
 
   }
 
   int compter_exemplaires(Oeuvre& o) const {
     int x=0;
 
-    for (auto const & ex : liste) {
-      auto exo = ex.getOeuvre();
+    for (auto const &ex : liste) {
+      auto &&exo = ex->getOeuvre();
       if (o.getAuteur().getNom() == exo.getAuteur().getNom() && o.getTitre() ==  exo.getTitre() ) {
         x++;
       }
 
     }
 
-/*    for_each(liste.begin(), liste.end(), [o,&x](const Exemplaire& ex){
-        auto exo = ex.getOeuvre();
-        if (o.getAuteur().getNom() == exo.getAuteur().getNom() && o.getTitre() ==  exo.getTitre() ) {
-          x++;
-        }
-        });*/
     return x;
   }
 
   void afficher_auteurs(bool prix=false) {
-    for_each(liste.begin(), liste.end(), [prix](const Exemplaire& ex){
-        auto a = ex.getOeuvre().getAuteur().getPrix();
+    for_each(liste.begin(), liste.end(), [prix](shared_ptr<Exemplaire> const &ex){
+    //for (auto const &ex : liste) {
+        auto &&a = ex->getOeuvre().getAuteur().getPrix();
         if (!prix || a ) {
-          cout << ex.getOeuvre().getAuteur().getNom() << endl;
+          cout << ex->getOeuvre().getAuteur().getNom() << endl;
         }
-      });
+     }
+    );
 
   }
 };
@@ -158,16 +156,15 @@ public:
 
 int main()
 {
-
   Auteur a1("Victor Hugo"),
-    a2("Alexandre Dumas"),
-    a3("Raymond Queneau", true);
+         a2("Alexandre Dumas"),
+         a3("Raymond Queneau", true);
 
   Oeuvre o1("Les Misérables"           , a1, "français" ),
-    o2("L'Homme qui rit"          , a1, "français" ),
-    o3("Le Comte de Monte-Cristo" , a2, "français" ),
-    o4("Zazie dans le métro"      , a3, "français" ),
-    o5("The Count of Monte-Cristo", a2, "anglais" );
+         o2("L'Homme qui rit"          , a1, "français" ),
+         o3("Le Comte de Monte-Cristo" , a2, "français" ),
+         o4("Zazie dans le métro"      , a3, "français" ),
+         o5("The Count of Monte-Cristo", a2, "anglais" );
 
   Bibliotheque biblio("municipale");
   biblio.stocker(o1, 2);
